@@ -15,7 +15,7 @@
 
 ## 🧐 &nbsp; Why?
 
-Forget about actions, connections, reducers and a lot of boilerplate to create and manage states. With reworm you can create and manage state simple as the image above.
+Forget about actions, connections, reducers and a lot of boilerplate to create and manage states. With reworm you can create and manage state as simple as on the image above.
 
 ## 💻 &nbsp; Install and Usage
 
@@ -42,7 +42,7 @@ const App = () => (
 
 ### Change your state easily
 
-Instead of define actions or something else to change your state, with reworm you just need to use `set` method like that:
+Instead of defining actions or something else to change your state, with reworm you just need to use the `set` method like that:
 
 ```js
 import React from 'react'
@@ -66,7 +66,7 @@ class App extends React.Component {
 
 ### Using selectors
 
-Selectors are good because avoid the need to repeat code, with it you can just create some functions and use them across your aplication.
+Selectors are good because they prevent you from duplicating code. With it you can just create some functions and use them throughout your application.
 
 ```jsx
 import React from 'react'
