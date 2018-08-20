@@ -27,7 +27,7 @@ $ yarn add reworm
 
 Then just create your new state and use it!
 
-```
+```jsx
 import React from 'react'
 import { create } from 'reworm'
 
