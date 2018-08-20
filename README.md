@@ -74,8 +74,8 @@ import { create } from 'reworm'
 
 const { State, select } = reworm({ list: ['Peter', 'John'] })
 
-const johnSelector = select(s =>
-  s.list.filter(user => user.includes('Peter'))
+const johnSelector = select(state =>
+  state.list.find(user => user.includes('Peter'))
 )
 
 const App = () => (
