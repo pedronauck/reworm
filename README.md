@@ -13,8 +13,6 @@
   <img src="https://cdn-std.dprcdn.net/files/acc_649651/UtUFi5" width="80%"/>
 </p>
 
-## 💡 &nbsp; Solution
-
 ## 🧐 &nbsp; Why?
 
 Forget about actions, connections, reducers and a lot of boilerplate to create and manage states. With reworm you can create and manage state simple as the image above.
