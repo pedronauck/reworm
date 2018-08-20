@@ -72,7 +72,7 @@ Selectors are good because avoid the need to repeat code, with it you can just c
 import React from 'react'
 import { create } from 'reworm'
 
-const { State, select } = reworm({ list: ['Peter', 'John'] })
+const { State, select } = create({ list: ['Peter', 'John'] })
 
 const johnSelector = select(s =>
   s.list.filter(user => user.includes('Peter'))
