@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://cdn-std.dprcdn.net/files/acc_649651/HkXs48" width="80%"/>
+  <img src="https://cdn-std.dprcdn.net/files/acc_649651/VDTl0f" width="80%"/>
 </p>
 
 ## 🧐 &nbsp; Why?
