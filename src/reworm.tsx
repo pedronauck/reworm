@@ -4,6 +4,8 @@ import makeSubject from 'callbag-subject'
 import equal from 'fast-deep-equal'
 import merge from 'deepmerge'
 
+const isPrimitive = (test: any) => test !== Object(test)
+
 type PrevState<T> = (prevState: T) => T
 type GetFn<T> = (state: T) => React.ReactNode
 
@@ -35,10 +37,11 @@ export function create<T = any>(initial: T = {} as T): State<T> {
       return this.props.children(STATE)
     }
     private update = (next: T): void => {
-      const newState = merge(STATE, next)
+      const newState = !isPrimitive(next) ? merge(STATE, next) : next
+      const isEqual = !isPrimitive ? equal(STATE, newState) : STATE === newState
 
-      if (!equal(STATE, newState)) STATE = newState
-      this.setState({})
+      if (!isEqual) STATE = newState
+      this.forceUpdate()
     }
   }
 

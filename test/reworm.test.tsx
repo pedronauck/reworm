@@ -81,4 +81,28 @@ describe('State', () => {
       '<div><div>Michael</div><input value="Michael"></div>'
     )
   })
+
+  it('should modify state with primitive types', () => {
+    const initial = 'John'
+    const user = create(initial)
+
+    const Users = () => <div>{user.get(val => val)}</div>
+    const App = () => (
+      <div>
+        <Users />
+        {user.get(val => (
+          <input value={val} onChange={ev => user.set(ev.target.value)} />
+        ))}
+      </div>
+    )
+
+    const result = mount(<App />)
+    const input = result.find('input')
+
+    input.simulate('change', { target: { value: 'Michael' } })
+
+    expect(result.html()).toEqual(
+      '<div><div>Michael</div><input value="Michael"></div>'
+    )
+  })
 })
