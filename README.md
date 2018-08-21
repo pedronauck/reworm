@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://cdn-std.dprcdn.net/files/acc_649651/UtUFi5" width="80%"/>
+  <img src="https://cdn-std.dprcdn.net/files/acc_649651/HkXs48" width="80%"/>
 </p>
 
 ## 🧐 &nbsp; Why?
@@ -31,12 +31,10 @@ Then just create your new state and use it!
 import React from 'react'
 import { create } from 'reworm'
 
-const { State, get } = create({ name: 'John' })
+const { get } = create({ name: 'John' })
 
 const App = () => (
-  <State>
-    <div>{get(s => s.name)}</div>
-  </State>
+  <div>{get(s => s.name)}</div>
 )
 ```
 
@@ -48,7 +46,7 @@ Instead of defining actions or something else to change your state, with reworm 
 import React from 'react'
 import { create } from 'reworm'
 
-const { State, set, get } = create({ name: 'John' })
+const { set, get } = create({ name: 'John' })
 
 class App extends React.Component {
   componentDidMount() {
@@ -56,9 +54,7 @@ class App extends React.Component {
   }
   render() {
     return (
-      <State>
-        <div>{get(s => s.name)}</div>
-      </State>
+      <div>{get(s => s.name)}</div>
     )
   }
 }
@@ -72,16 +68,14 @@ Selectors are good because they prevent you from duplicating code. With it you c
 import React from 'react'
 import { create } from 'reworm'
 
-const { State, select } = create({ list: ['Peter', 'John'] })
+const { select } = create({ list: ['Peter', 'John'] })
 
 const johnSelector = select(state =>
-  state.list.find(user => user.includes('Peter'))
+  state.list.find(user => user.includes('John'))
 )
 
 const App = () => (
-  <State>
-    <div>{johnSelector(user => user)}</div>
-  </State>
+  <div>{johnSelector(user => user)}</div>
 )
 ```
 
@@ -90,28 +84,25 @@ const App = () => (
 #### `create<T>(initial?: T): State`
 Create a new state
 
-#### `State<T>: ReactComponent<{ initial?: T }>`
-Use this component as wrapper when you want to access your state
-
 #### `get((state: T) => React.ReactNode)`
 Use this method to access your state
 
 #### `set((state: T | (prevState: T) => T) => T)`
 Use this method to set your state
 
-#### `select(selector: (state: T) => T) => (fn: GetFn<T>) => React.ReactNode`
+#### `select<S = any>(selector: (state: T) => S) => (fn: GetFn<T>) => React.ReactNode`
 Create selectors that can be used with your state and avoid repeating code.
 
 ```js
 import React from 'react'
 import { create } from 'reworm'
 
-const { State, select } = create({ name: 'John' })
+const { select } = create({ name: 'John' })
 const userSelector = select(s => s.name)
 
 const App = () => (
   <State>
-    {userSelector}
+    {userSelector(name => name)}
   </State>
 )
 ```
@@ -129,8 +120,7 @@ type GetFn<T> = (state: T) => React.ReactNode
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
   set: (param: T | PrevState<T>) => void
-  select: <S = T>(selector: (state: T) => S) => (fn: GetFn<S>) => React.ReactNode
-  State: React.ComponentType<ProviderProps<T>>
+  select: <S = any>(selector: (state: T) => S) => (fn: GetFn<S>) => React.ReactNode
 }
 
 function create<T>(initial: T) => State<T>
