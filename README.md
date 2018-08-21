@@ -80,7 +80,7 @@ const johnSelector = select(s =>
 
 const App = () => (
   <State>
-    <div>{johnSelector(user => user)}</div>
+    <div>{johnSelector}</div>
   </State>
 )
 ```
