@@ -14,7 +14,9 @@ interface ConsumerProps<T> {
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
   set: (param: T | PrevState<T>) => void
-  select: (selector: (state: T) => any) => (fn: GetFn<T>) => React.ReactNode
+  select: <S = any>(
+    selector: (state: T) => S
+  ) => (fn: GetFn<S>) => React.ReactNode
 }
 
 export function create<T = any>(initial: T = {} as T): State<T> {
