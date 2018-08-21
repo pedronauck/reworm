@@ -1,6 +1,7 @@
 {
   "extends": ["tslint:latest", "tslint-config-prettier"],
   "rules": {
+    "curly": false,
     "interface-name": [true, "never-prefix"],
     "ordered-imports": false,
     "object-literal-sort-keys": false,
@@ -14,6 +15,7 @@
     "max-classes-per-file": false,
     "no-angle-bracket-type-assertion": false,
     "no-object-literal-type-assertion": false,
+    "no-submodule-imports": false,
 
     // Recommended built-in rules
     "no-var-keyword": true,

@@ -76,11 +76,15 @@
   "dependencies": {
     "callbag-observe": "^1.0.0",
     "callbag-subject": "^1.0.2",
-    "create-react-context": "^0.2.2",
+    "deepmerge": "^2.1.1",
+    "fast-deep-equal": "^2.0.1",
     "react": "^16.4.2",
     "react-dom": "^16.4.2"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  },
   "devDependencies": {
     "@types/jest": "^22.0.0",
     "@types/node": "^10.7.1",

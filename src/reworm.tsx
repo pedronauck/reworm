@@ -1,30 +1,50 @@
 import React, { Component } from 'react'
 import observe from 'callbag-observe'
 import makeSubject from 'callbag-subject'
-import createContext from 'create-react-context'
-
-interface ProviderProps<T> {
-  initial?: T
-}
+import equal from 'fast-deep-equal'
+import merge from 'deepmerge'
 
 type PrevState<T> = (prevState: T) => T
 type GetFn<T> = (state: T) => React.ReactNode
 
+interface ConsumerProps<T> {
+  children: (renderProps: T) => any
+}
+
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
   set: (param: T | PrevState<T>) => void
-  select: (selector: (state: T) => T) => (fn: GetFn<T>) => React.ReactNode
-  State: React.ComponentType<ProviderProps<T>>
+  select: (selector: (state: T) => any) => (fn: GetFn<T>) => React.ReactNode
 }
 
 export function create<T = any>(initial: T = {} as T): State<T> {
+  let STATE = initial
   const subject = makeSubject()
-  const { Provider, Consumer } = createContext<T>(initial)
-  const get = (fn: GetFn<T>) => <Consumer>{fn}</Consumer>
+
+  class Consumer extends Component<ConsumerProps<T>> {
+    public componentDidMount(): void {
+      const update = observe(this.update)
+      update(subject)
+    }
+    public componentWillUnmount(): void {
+      subject(2)
+    }
+    public render(): any {
+      return this.props.children(STATE)
+    }
+    private update = (next: T): void => {
+      const newState = merge(STATE, next)
+
+      if (!equal(STATE, newState)) STATE = newState
+      this.setState({})
+    }
+  }
 
   return {
-    get,
-    set: fn => subject(1, fn),
+    get: fn => <Consumer>{fn}</Consumer>,
+    set: next => {
+      subject(1, typeof next === 'function' ? next(STATE) : next)
+    },
     select: selector => fn => (
       <Consumer>
         {state => {
@@ -33,17 +53,5 @@ export function create<T = any>(initial: T = {} as T): State<T> {
         }}
       </Consumer>
     ),
-    State: class CustomProvider extends Component<ProviderProps<T>, T> {
-      public state: T = this.props.initial || initial
-      public componentDidMount(): void {
-        observe((v: T) => this.setState(v))(subject)
-      }
-      public componentWillUnmount(): void {
-        subject(2)
-      }
-      public render(): React.ReactNode {
-        return <Provider value={this.state}>{this.props.children}</Provider>
-      }
-    },
   }
 }

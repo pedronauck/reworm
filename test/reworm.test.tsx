@@ -14,15 +14,11 @@ describe('State', () => {
 
   it('should access state using get', () => {
     const initial = ['John', 'Michael']
-    const { State, ...users } = create()
+    const users = create(initial)
     const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
 
     const Users = () => <Fragment>{users.get(userList)}</Fragment>
-    const App = () => (
-      <State initial={initial}>
-        <Users />
-      </State>
-    )
+    const App = () => <Users />
 
     const result = shallow(<App />)
 
@@ -32,36 +28,40 @@ describe('State', () => {
   })
 
   it('should access state using selectors', () => {
-    const initial = ['John', 'Michael']
-    const { State, ...users } = create()
-    const usersList = jest.fn(state => state)
+    const initial = { list: ['John', 'Michael'] }
+    const users = create(initial)
+    const usersList = jest.fn(state => state.list)
     const renderUser = jest.fn(users => users.map(user => <div>{user}</div>))
     const usersSelector = users.select(usersList)
 
+    const johnSelector = users.select(s => s.list.find(u => u.includes('John')))
+
     const Users = () => <Fragment>{usersSelector(renderUser)}</Fragment>
+    const John = () => <Fragment>{johnSelector(u => u)}</Fragment>
 
     const App = () => (
-      <State initial={initial}>
+      <Fragment>
         <Users />
-      </State>
+        <John />
+      </Fragment>
     )
 
     const result = shallow(<App />)
 
-    expect(result.html()).toBe('<div>John</div><div>Michael</div>')
+    expect(result.html()).toBe('<div>John</div><div>Michael</div>John')
     expect(usersList).toHaveBeenCalled()
     expect(usersList).toHaveBeenCalledWith(initial)
     expect(renderUser).toHaveBeenCalled()
-    expect(renderUser).toHaveBeenCalledWith(initial)
+    expect(renderUser).toHaveBeenCalledWith(initial.list)
   })
 
   it('should modify state', () => {
     const initial = { name: 'John' }
-    const { State, ...user } = create()
+    const user = create(initial)
 
     const Users = () => <div>{user.get(s => s.name)}</div>
     const App = () => (
-      <State initial={initial}>
+      <div>
         <Users />
         {user.get(s => (
           <input
@@ -69,13 +69,16 @@ describe('State', () => {
             onChange={ev => user.set({ name: ev.target.value })}
           />
         ))}
-      </State>
+      </div>
     )
 
     const result = mount(<App />)
     const input = result.find('input')
 
     input.simulate('change', { target: { value: 'Michael' } })
-    expect(result.html()).toEqual('<div>Michael</div>')
+
+    expect(result.html()).toEqual(
+      '<div><div>Michael</div><input value="Michael"></div>'
+    )
   })
 })
