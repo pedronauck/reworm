@@ -13,7 +13,7 @@ interface ConsumerProps<T> {
 
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
-  set: (param: T | PrevState<T>) => void
+  set: (next: T | PrevState<T>) => void
   select: <S = any>(
     selector: (state: T) => S
   ) => (fn: GetFn<S>) => React.ReactNode
