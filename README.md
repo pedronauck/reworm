@@ -129,7 +129,7 @@ type GetFn<T> = (state: T) => React.ReactNode
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
   set: (param: T | PrevState<T>) => void
-  select: (selector: (state: T) => T) => (fn: GetFn<T>) => React.ReactNode
+  select: <S = T>(selector: (state: T) => S) => (fn: GetFn<S>) => React.ReactNode
   State: React.ComponentType<ProviderProps<T>>
 }
 
