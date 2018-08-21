@@ -1,6 +1,6 @@
 <br />
 <p align="center">
-  <img src="https://cdn-std.dprcdn.net/files/acc_649651/LAevjl" width="300" />
+  <img src="https://cdn-std.dprcdn.net/files/acc_649651/z2M2Am" width="300" />
 </p>
 
 <p align="center">
