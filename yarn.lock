@@ -587,14 +587,6 @@ cachedir@^1.1.0:
   dependencies:
     os-homedir "^1.0.1"
 
-callbag-observe@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/callbag-observe/-/callbag-observe-1.0.0.tgz#fd91dcc2ef628317c7a0031e17398132a21fcbbf"
-
-callbag-subject@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/callbag-subject/-/callbag-subject-1.0.2.tgz#63923185000bcb10ec12d03491102aa43df93080"
-
 callsites@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/callsites/-/callsites-2.0.0.tgz#06eb84f00eea413da86affefacbffb36093b3c50"

@@ -75,8 +75,6 @@
     ]
   },
   "dependencies": {
-    "callbag-observe": "^1.0.0",
-    "callbag-subject": "^1.0.2",
     "fast-deep-equal": "^2.0.1",
     "react": "^16.4.2",
     "react-dom": "^16.4.2"
