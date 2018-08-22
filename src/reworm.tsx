@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import observe from 'callbag-observe'
 import makeSubject from 'callbag-subject'
 import equal from 'fast-deep-equal'
@@ -22,10 +22,18 @@ interface State<T> {
 }
 
 export function create<T = any>(initial: T = {} as T): State<T> {
-  let STATE = initial
   const subject = makeSubject()
 
-  class Consumer extends Component<ConsumerProps<T>> {
+  class Consumer extends PureComponent<ConsumerProps<T>> {
+    public _prevState: T
+    public _state: T
+
+    constructor(props: ConsumerProps<T>) {
+      super(props)
+      this._state = initial
+      this._prevState = initial
+    }
+
     public componentDidMount(): void {
       const update = observe(this.update)
       update(subject)
@@ -34,22 +42,30 @@ export function create<T = any>(initial: T = {} as T): State<T> {
       subject(2)
     }
     public render(): any {
-      return this.props.children(STATE)
+      return this.props.children(this._state)
     }
-    private update = (next: T): void => {
-      const newState = !isPrimitive(next) ? merge(STATE, next) : next
-      const isEqual = !isPrimitive ? equal(STATE, newState) : STATE === newState
 
-      if (!isEqual) STATE = newState
-      this.forceUpdate()
+    private update = (next: T): void => {
+      const nextState = typeof next === 'function' ? next(this._state) : next
+      const newState = !isPrimitive(nextState)
+        ? merge(this._state, nextState)
+        : nextState
+
+      const isEqual = !isPrimitive(newState)
+        ? equal(this._state, newState)
+        : this._state === newState
+
+      if (!isEqual) {
+        this._prevState = this._state
+        this._state = newState
+        this.forceUpdate()
+      }
     }
   }
 
   return {
     get: fn => <Consumer>{fn}</Consumer>,
-    set: next => {
-      subject(1, typeof next === 'function' ? next(STATE) : next)
-    },
+    set: next => subject(1, next),
     select: selector => fn => (
       <Consumer>
         {state => {

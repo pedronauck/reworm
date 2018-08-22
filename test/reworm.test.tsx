@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React, { Component, Fragment } from 'react'
 import { create } from '../src/reworm'
 import { shallow, mount } from 'enzyme'
 
@@ -60,23 +60,33 @@ describe('State', () => {
     const user = create(initial)
 
     const Users = () => <div>{user.get(s => s.name)}</div>
-    const App = () => (
-      <div>
-        <Users />
-        {user.get(s => (
-          <input
-            value={s.name}
-            onChange={ev => user.set({ name: ev.target.value })}
-          />
-        ))}
-      </div>
-    )
+
+    class App extends Component {
+      public componentDidMount(): void {
+        user.set({ name: 'Peter' })
+      }
+      public render(): React.ReactNode {
+        return (
+          <div>
+            <Users />
+            {user.get(s => (
+              <input
+                value={s.name}
+                onChange={ev => user.set({ name: ev.target.value })}
+              />
+            ))}
+          </div>
+        )
+      }
+    }
 
     const result = mount(<App />)
     const input = result.find('input')
+    expect(result.html()).toEqual(
+      '<div><div>Peter</div><input value="Peter"></div>'
+    )
 
     input.simulate('change', { target: { value: 'Michael' } })
-
     expect(result.html()).toEqual(
       '<div><div>Michael</div><input value="Michael"></div>'
     )
