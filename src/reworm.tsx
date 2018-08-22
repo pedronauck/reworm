@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react'
 import observe from 'callbag-observe'
 import makeSubject from 'callbag-subject'
 import equal from 'fast-deep-equal'
-import merge from 'deepmerge'
 
 const isPrimitive = (test: any) => test !== Object(test)
 
@@ -48,7 +47,7 @@ export function create<T = any>(initial: T = {} as T): State<T> {
     private update = (next: T): void => {
       const nextState = typeof next === 'function' ? next(this._state) : next
       const newState = !isPrimitive(nextState)
-        ? merge(this._state, nextState)
+        ? Object.assign({}, this._state, nextState)
         : nextState
 
       const isEqual = !isPrimitive(newState)
