@@ -27,9 +27,9 @@ const createEmitter = () => {
     unsubscribe: (listener: Function): void => {
       listeners.splice(listeners.indexOf(listener), 1)
     },
-    emit: (...args: Array<any>): void => {
+    emit: (event: any): void => {
       for (let i = 0; i < listeners.length; i++) {
-        listeners[i](...args)
+        listeners[i](event)
       }
     },
   }
