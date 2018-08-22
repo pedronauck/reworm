@@ -101,9 +101,7 @@ const { select } = create({ name: 'John' })
 const userSelector = select(s => s.name)
 
 const App = () => (
-  <State>
-    {userSelector(name => name)}
-  </State>
+  <div>{userSelector(name => name)}</div>
 )
 ```
 
