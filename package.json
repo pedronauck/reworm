@@ -29,6 +29,7 @@
     "test:prod": "npm run lint && npm run test -- --coverage --no-cache",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
     "commit": "git-cz",
+    "prerelease": "yarn build",
     "release": "np",
     "precommit": "lint-staged"
   },

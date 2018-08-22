@@ -44,8 +44,9 @@ export function create<T = any>(initial: T = {} as T): State<T> {
       return this.props.children(this._state)
     }
 
-    private update = (next: T): void => {
-      const nextState = typeof next === 'function' ? next(this._state) : next
+    private update = (next: any): void => {
+      const nextState: T = typeof next === 'function' ? next(this._state) : next
+
       const newState = !isPrimitive(nextState)
         ? Object.assign({}, this._state, nextState)
         : nextState
