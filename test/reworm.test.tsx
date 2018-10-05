@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { create } from '../src/reworm'
+import { create, Provider } from '../src/reworm'
 import { shallow, mount } from 'enzyme'
 
 describe('State', () => {
@@ -18,7 +18,11 @@ describe('State', () => {
     const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
 
     const Users = () => <Fragment>{users.get(userList)}</Fragment>
-    const App = () => <Users />
+    const App = () => (
+      <Provider>
+        <Users />
+      </Provider>
+    )
 
     const result = shallow(<App />)
 
@@ -40,10 +44,12 @@ describe('State', () => {
     const John = () => <Fragment>{johnSelector(u => u)}</Fragment>
 
     const App = () => (
-      <Fragment>
-        <Users />
-        <John />
-      </Fragment>
+      <Provider>
+        <Fragment>
+          <Users />
+          <John />
+        </Fragment>
+      </Provider>
     )
 
     const result = shallow(<App />)
@@ -67,15 +73,17 @@ describe('State', () => {
       }
       public render(): React.ReactNode {
         return (
-          <div>
-            <Users />
-            {user.get(s => (
-              <input
-                value={s.name}
-                onChange={ev => user.set({ name: ev.target.value })}
-              />
-            ))}
-          </div>
+          <Provider>
+            <div>
+              <Users />
+              {user.get(s => (
+                <input
+                  value={s.name}
+                  onChange={ev => user.set({ name: ev.target.value })}
+                />
+              ))}
+            </div>
+          </Provider>
         )
       }
     }
@@ -98,12 +106,14 @@ describe('State', () => {
 
     const Users = () => <div>{user.get(val => val)}</div>
     const App = () => (
-      <div>
-        <Users />
-        {user.get(val => (
-          <input value={val} onChange={ev => user.set(ev.target.value)} />
-        ))}
-      </div>
+      <Provider>
+        <div>
+          <Users />
+          {user.get(val => (
+            <input value={val} onChange={ev => user.set(ev.target.value)} />
+          ))}
+        </div>
+      </Provider>
     )
 
     const result = mount(<App />)
@@ -114,5 +124,25 @@ describe('State', () => {
     expect(result.html()).toEqual(
       '<div><div>Michael</div><input value="Michael"></div>'
     )
+  })
+
+  it('should trigger subscribe function', () => {
+    const initial = 'John'
+    const user = create(initial)
+
+    class App extends Component {
+      public state = { name: null }
+      public componentDidMount(): void {
+        user.subscribe(name => this.setState({ name }))
+        user.set('Michael')
+      }
+      public render(): React.ReactNode {
+        return <div>Hello {this.state.name}</div>
+      }
+    }
+
+    const result = mount(<App />)
+
+    expect(result.html()).toEqual('<div>Hello Michael</div>')
   })
 })

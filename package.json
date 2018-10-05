@@ -75,9 +75,11 @@
     ]
   },
   "dependencies": {
+    "create-react-context": "^0.2.3",
     "fast-deep-equal": "^2.0.1",
     "react": "^16.4.2",
-    "react-dom": "^16.4.2"
+    "react-dom": "^16.4.2",
+    "ulid": "^2.3.0"
   },
   "peerDependencies": {
     "react": "^16.2.0",

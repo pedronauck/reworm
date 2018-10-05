@@ -1,14 +1,11 @@
-import React, { PureComponent } from 'react'
+import React, { Component } from 'react'
+import createContext from 'create-react-context'
+import { ulid } from 'ulid'
 import equal from 'fast-deep-equal'
-
-const isPrimitive = (test: any) => test !== Object(test)
 
 type PrevState<T> = (prevState: T) => T
 type GetFn<T> = (state: T) => React.ReactNode
-
-interface ConsumerProps<T> {
-  children: (renderProps: T) => any
-}
+type SubscribeFn<T> = (state: T) => any
 
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
@@ -16,77 +13,80 @@ interface State<T> {
   select: <S = any>(
     selector: (state: T) => S
   ) => (fn: GetFn<S>) => React.ReactNode
+  subscribe: (fn: SubscribeFn<T>) => () => void
 }
 
-const createEmitter = () => {
-  let listeners: Array<Function> = []
+type Listener = (id: string, next: any) => void
+
+const createStore = () => {
+  const listeners: Listener[] = []
+  const initial: Record<string, any> = {}
+
   return {
-    subscribe: (listener: Function): void => {
+    getInitial: () => initial,
+    setInitial: (id: string, next: any): void => {
+      initial[id] = next
+    },
+    subscribe: (listener: Listener): void => {
       listeners.push(listener)
     },
-    unsubscribe: (listener: Function): void => {
+    unsubscribe: (listener: Listener): void => {
       listeners.splice(listeners.indexOf(listener), 1)
     },
-    emit: (event: any): void => {
-      for (let i = 0; i < listeners.length; i++) {
-        listeners[i](event)
+    emit: (id: string, next: any): void => {
+      for (const listener of listeners) {
+        listener(id, next)
       }
     },
+  }
+}
+
+const ctx = createContext<Record<string, any>>({})
+const store = createStore()
+
+export class Provider extends Component {
+  public state = store.getInitial()
+  public componentDidMount(): void {
+    store.subscribe(this.handleUpdate)
+  }
+  public componentWillUnmount(): void {
+    store.unsubscribe(this.handleUpdate)
+  }
+  public shouldComponentUpdate(nextProps: any, nextState: any): boolean {
+    return !equal(this.state, nextState)
+  }
+  public render(): React.ReactNode {
+    return <ctx.Provider value={this.state}>{this.props.children}</ctx.Provider>
+  }
+
+  private handleUpdate = (id: string, next: any) => {
+    const nextState = typeof next === 'function' ? next(this.state) : next
+    this.setState({ [id]: nextState })
   }
 }
 
 export function create<T = any>(initial: T = {} as T): State<T> {
-  const { subscribe, unsubscribe, emit } = createEmitter()
-
-  class Consumer extends PureComponent<ConsumerProps<T>> {
-    public _prevState: T
-    public _state: T
-
-    constructor(props: ConsumerProps<T>) {
-      super(props)
-      this._state = initial
-      this._prevState = initial
-    }
-
-    public componentDidMount(): void {
-      subscribe(this.update)
-    }
-    public componentWillUnmount(): void {
-      unsubscribe(this.update)
-    }
-    public render(): any {
-      return this.props.children(this._state)
-    }
-
-    private update = (next: any): void => {
-      const nextState: T = typeof next === 'function' ? next(this._state) : next
-
-      const newState = !isPrimitive(nextState)
-        ? Object.assign({}, this._state, nextState)
-        : nextState
-
-      const isEqual = !isPrimitive(newState)
-        ? equal(this._state, newState)
-        : this._state === newState
-
-      if (!isEqual) {
-        this._prevState = this._state
-        this._state = newState
-        this.forceUpdate()
-      }
-    }
-  }
+  const id = ulid()
+  store.setInitial(id, initial)
 
   return {
-    get: fn => <Consumer>{fn}</Consumer>,
-    set: emit,
+    get: fn => <ctx.Consumer>{state => fn(state[id] as T)}</ctx.Consumer>,
+    set: next => store.emit(id, next),
     select: selector => fn => (
-      <Consumer>
+      <ctx.Consumer>
         {state => {
-          const select = selector(state)
+          const select = selector(state[id] as T)
           return fn(select)
         }}
-      </Consumer>
+      </ctx.Consumer>
     ),
+    subscribe: (fn: SubscribeFn<T>): (() => void) => {
+      const sub = (selectedId: string, next: any) => {
+        if (selectedId === id) fn(next)
+      }
+
+      store.subscribe(sub)
+      return () => store.unsubscribe(sub)
+    },
   }
 }

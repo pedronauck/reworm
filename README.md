@@ -27,16 +27,18 @@ Install reworm using your package manager
 $ yarn add reworm
 ```
 
-Then just create your new state and use it!
+Then just wrap your app with our `Provider`, create your new state and use it!
 
 ```jsx
 import React from 'react'
-import { create } from 'reworm'
+import { Provider, create } from 'reworm'
 
 const { get } = create({ name: 'John' })
 
 const App = () => (
-  <div>{get(s => s.name)}</div>
+  <Provider>
+    <div>{get(s => s.name)}</div>
+  </Provider>
 )
 ```
 
@@ -46,7 +48,7 @@ Instead of defining actions or something else to change your state, with reworm 
 
 ```js
 import React from 'react'
-import { create } from 'reworm'
+import { Provider, create } from 'reworm'
 
 const { set, get } = create({ name: 'John' })
 
@@ -56,7 +58,9 @@ class App extends React.Component {
   }
   render() {
     return (
-      <div>{get(s => s.name)}</div>
+      <Provider>
+        <div>{get(s => s.name)}</div>
+      </Provider>
     )
   }
 }
@@ -68,7 +72,7 @@ Selectors are good because they prevent you from duplicating code. With it you c
 
 ```jsx
 import React from 'react'
-import { create } from 'reworm'
+import { Provider, create } from 'reworm'
 
 const { select } = create({ list: ['Peter', 'John'] })
 
@@ -77,8 +81,36 @@ const johnSelector = select(state =>
 )
 
 const App = () => (
-  <div>{johnSelector(user => user)}</div>
+  <Provider>
+    <div>{johnSelector(user => user)}</div>
+  </Provider>
 )
+```
+
+### Listening state changes
+
+If you want to listen changes on your state you can use `subscribe()`:
+
+```jsx
+import React from 'react'
+import { Provider, create } from 'reworm'
+
+const user = create()
+
+class App extends Component {
+  public state = {
+    name: 'John'
+  }
+
+  public componentDidMount(): void {
+    user.subscribe(name => this.setState({ name }))
+    user.set('Michael')
+  }
+
+  public render(): React.ReactNode {
+    return <div>Hello {this.state.name}</div>
+  }
+}
 ```
 
 ## 🔎 &nbsp; API
@@ -95,32 +127,23 @@ Use this method to set your state
 #### `select<S = any>(selector: (state: T) => S) => (fn: GetFn<T>) => React.ReactNode`
 Create selectors that can be used with your state and avoid repeating code.
 
-```js
-import React from 'react'
-import { create } from 'reworm'
-
-const { select } = create({ name: 'John' })
-const userSelector = select(s => s.name)
-
-const App = () => (
-  <div>{userSelector(name => name)}</div>
-)
-```
+#### `subscribe: (fn: SubscribeFn<T>) => () => void`
+Use this method to listen state changes
 
 ## 📝 &nbsp; Typings
 
 ```ts
-interface ProviderProps<T> {
-  initial?: T
-}
-
 type PrevState<T> = (prevState: T) => T
 type GetFn<T> = (state: T) => React.ReactNode
+type SubscribeFn<T> = (state: T) => any
 
 interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
-  set: (param: T | PrevState<T>) => void
-  select: <S = any>(selector: (state: T) => S) => (fn: GetFn<S>) => React.ReactNode
+  set: (next: T | PrevState<T>) => void
+  select: <S = any>(
+    selector: (state: T) => S
+  ) => (fn: GetFn<S>) => React.ReactNode
+  subscribe: (fn: SubscribeFn<T>) => () => void
 }
 
 function create<T>(initial: T) => State<T>
