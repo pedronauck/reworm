@@ -1,6 +1,4 @@
 import React, { PureComponent } from 'react'
-import observe from 'callbag-observe'
-import makeSubject from 'callbag-subject'
 import equal from 'fast-deep-equal'
 
 const isPrimitive = (test: any) => test !== Object(test)
@@ -20,8 +18,25 @@ interface State<T> {
   ) => (fn: GetFn<S>) => React.ReactNode
 }
 
+const createEmitter = () => {
+  let listeners: Array<Function> = []
+  return {
+    subscribe: (listener: Function): void => {
+      listeners.push(listener)
+    },
+    unsubscribe: (listener: Function): void => {
+      listeners.splice(listeners.indexOf(listener), 1)
+    },
+    emit: (event: any): void => {
+      for (let i = 0; i < listeners.length; i++) {
+        listeners[i](event)
+      }
+    },
+  }
+}
+
 export function create<T = any>(initial: T = {} as T): State<T> {
-  const subject = makeSubject()
+  const { subscribe, unsubscribe, emit } = createEmitter()
 
   class Consumer extends PureComponent<ConsumerProps<T>> {
     public _prevState: T
@@ -34,11 +49,10 @@ export function create<T = any>(initial: T = {} as T): State<T> {
     }
 
     public componentDidMount(): void {
-      const update = observe(this.update)
-      update(subject)
+      subscribe(this.update)
     }
     public componentWillUnmount(): void {
-      subject(2)
+      unsubscribe(this.update)
     }
     public render(): any {
       return this.props.children(this._state)
@@ -65,7 +79,7 @@ export function create<T = any>(initial: T = {} as T): State<T> {
 
   return {
     get: fn => <Consumer>{fn}</Consumer>,
-    set: next => subject(1, next),
+    set: emit,
     select: selector => fn => (
       <Consumer>
         {state => {
