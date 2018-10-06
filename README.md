@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://cdn-std.dprcdn.net/files/acc_649651/VDTl0f" width="80%"/>
+  <img src="https://cdn-std.dprcdn.net/files/acc_649651/9JemSv" width="80%"/>
 </p>
 
 ## 🧐 &nbsp; Why?
@@ -98,16 +98,16 @@ import { Provider, create } from 'reworm'
 const user = create()
 
 class App extends Component {
-  public state = {
+  state = {
     name: 'John'
   }
 
-  public componentDidMount(): void {
+  componentDidMount() {
     user.subscribe(name => this.setState({ name }))
     user.set('Michael')
   }
 
-  public render(): React.ReactNode {
+  render() {
     return <div>Hello {this.state.name}</div>
   }
 }
