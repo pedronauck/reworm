@@ -60,8 +60,9 @@ export class Provider extends Component {
   }
 
   private handleUpdate = (id: string, next: any) => {
-    const nextState = typeof next === 'function' ? next(this.state) : next
-    this.setState({ [id]: nextState })
+    this.setState((prevState: any) => ({
+      [id]: typeof next === 'function' ? next(prevState[id]) : next,
+    }))
   }
 }
 
