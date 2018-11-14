@@ -3,11 +3,11 @@ import createContext from 'create-react-context'
 import { ulid } from 'ulid'
 import equal from 'fast-deep-equal'
 
-type PrevState<T> = (prevState: T) => T
-type GetFn<T> = (state: T) => React.ReactNode
-type SubscribeFn<T> = (state: T) => any
+export type PrevState<T> = (prevState: T) => T
+export type GetFn<T> = (state: T) => React.ReactNode
+export type SubscribeFn<T> = (state: T) => any
 
-interface State<T> {
+export interface State<T> {
   get: (fn: GetFn<T>) => React.ReactNode
   set: (next: T | PrevState<T>) => void
   select: <S = any>(
@@ -16,7 +16,7 @@ interface State<T> {
   subscribe: (fn: SubscribeFn<T>) => () => void
 }
 
-type Listener = (id: string, next: any) => void
+export type Listener = (id: string, next: any) => void
 
 const createStore = () => {
   const listeners: Listener[] = []
