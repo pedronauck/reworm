@@ -44,12 +44,8 @@ const createStore = () => {
 const ctx = createContext<Record<string, any>>({})
 const store = createStore()
 
-interface ProviderProps {
-  initial?: any
-}
-
-export class Provider extends Component<ProviderProps> {
-  public state = this.props.initial || store.getInitial()
+export class Provider extends Component {
+  public state = store.getInitial()
   public componentDidMount(): void {
     store.subscribe(this.handleUpdate)
   }
