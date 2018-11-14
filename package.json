@@ -1,6 +1,6 @@
 {
   "name": "reworm",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "The simplest way to manage your state",
   "license": "MIT",
   "main": "dist/reworm.umd.js",
