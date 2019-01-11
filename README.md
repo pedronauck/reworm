@@ -130,6 +130,9 @@ Create selectors that can be used with your state and avoid repeating code.
 #### `subscribe: (fn: SubscribeFn<T>) => () => void`
 Use this method to listen state changes
 
+#### `unsubscribe: (fn: SubscribeFn<T>) => () => void`
+Use this method to remove one listener
+
 ## 📝 &nbsp; Typings
 
 ```ts
