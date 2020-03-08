@@ -82,7 +82,7 @@ describe('State', () => {
             {get(s => (
               <input
                 type="text"
-                value={s.name}
+                value={s.name || ''}
                 onChange={ev => set({ name: ev.target.value })}
               />
             ))}
@@ -112,7 +112,7 @@ describe('State', () => {
           {user.get(val => (
             <input
               type="text"
-              value={val}
+              value={val || ''}
               onChange={ev => user.set(ev.target.value)}
             />
           ))}
