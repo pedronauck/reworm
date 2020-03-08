@@ -1,10 +1,10 @@
-import React, { Component, Fragment } from 'react'
-import { create, Provider } from '../src/reworm'
-import { shallow, mount } from 'enzyme'
+import React, { Component, Fragment, useEffect, FC, useState } from 'react'
+import { create, Provider, useReworm } from '../src/reworm'
+import { shallow, mount, render } from 'enzyme'
 
 describe('State', () => {
   it('should create a new state', () => {
-    const state = create()
+    const state = create('newState')
 
     expect(state).toBeDefined()
     expect(typeof state.get).toEqual('function')
@@ -14,7 +14,7 @@ describe('State', () => {
 
   it('should access state using get', () => {
     const initial = ['John', 'Michael']
-    const users = create(initial)
+    const users = create('userStore', initial)
     const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
 
     const Users = () => <Fragment>{users.get(userList)}</Fragment>
@@ -33,9 +33,11 @@ describe('State', () => {
 
   it('should access state using selectors', () => {
     const initial = { list: ['John', 'Michael'] }
-    const users = create(initial)
+    const users = create('userStore', initial)
     const usersList = jest.fn(state => state.list)
-    const renderUser = jest.fn(users => users.map(user => <div>{user}</div>))
+    const renderUser = jest.fn(users =>
+      users.map(user => <div key={user}>{user}</div>)
+    )
     const usersSelector = users.select(usersList)
 
     const johnSelector = users.select(s => s.list.find(u => u.includes('John')))
@@ -63,46 +65,44 @@ describe('State', () => {
 
   it('should modify state', () => {
     const initial = { name: 'John' }
-    const user = create(initial)
+    const user = create('userStore', initial)
 
     const Users = () => <div>{user.get(s => s.name)}</div>
 
-    class App extends Component {
-      public componentDidMount(): void {
-        user.set({ name: 'Peter' })
-      }
-      public render(): React.ReactNode {
-        return (
-          <Provider>
-            <div>
-              <Users />
-              {user.get(s => (
-                <input
-                  value={s.name}
-                  onChange={ev => user.set({ name: ev.target.value })}
-                />
-              ))}
-            </div>
-          </Provider>
-        )
-      }
+    const App: FC = () => {
+      const { set, get } = useReworm('userStore')
+      useEffect(() => {
+        set({ name: 'Peter' })
+      }, [])
+
+      return (
+        <Provider>
+          <div>
+            <Users />
+            {get(s => (
+              <input
+                type="text"
+                value={s.name}
+                onChange={ev => set({ name: ev.target.value })}
+              />
+            ))}
+          </div>
+        </Provider>
+      )
     }
 
     const result = mount(<App />)
     const input = result.find('input')
-    expect(result.html()).toEqual(
-      '<div><div>Peter</div><input value="Peter"></div>'
-    )
-
     input.simulate('change', { target: { value: 'Michael' } })
+
     expect(result.html()).toEqual(
-      '<div><div>Michael</div><input value="Michael"></div>'
+      '<div><div>Michael</div><input type="text" value="Michael"></div>'
     )
   })
 
   it('should modify state with primitive types', () => {
     const initial = 'John'
-    const user = create(initial)
+    const user = create('userStore', initial)
 
     const Users = () => <div>{user.get(val => val)}</div>
     const App = () => (
@@ -110,7 +110,11 @@ describe('State', () => {
         <div>
           <Users />
           {user.get(val => (
-            <input value={val} onChange={ev => user.set(ev.target.value)} />
+            <input
+              type="text"
+              value={val}
+              onChange={ev => user.set(ev.target.value)}
+            />
           ))}
         </div>
       </Provider>
@@ -122,13 +126,13 @@ describe('State', () => {
     input.simulate('change', { target: { value: 'Michael' } })
 
     expect(result.html()).toEqual(
-      '<div><div>Michael</div><input value="Michael"></div>'
+      '<div><div>Michael</div><input type="text" value="Michael"></div>'
     )
   })
 
   it('should trigger subscribe function', () => {
     const initial = 'John'
-    const user = create(initial)
+    const user = create('userStore', initial)
 
     class App extends Component {
       public state = { name: null }
@@ -144,5 +148,127 @@ describe('State', () => {
     const result = mount(<App />)
 
     expect(result.html()).toEqual('<div>Hello Michael</div>')
+  })
+
+  it('should be able to retrieve the state from a store using hooks', () => {
+    const initial = ['John', 'Michael']
+    const users = create('userStore', initial)
+
+    const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
+
+    const Users = () => {
+      const { get } = useReworm('userStore')
+      return <Fragment>{get(userList)}</Fragment>
+    }
+
+    const App = () => (
+      <Provider>
+        <Users />
+      </Provider>
+    )
+
+    const result = shallow(<App />)
+
+    expect(result.html()).toBe('<div>John</div><div>Michael</div>')
+    expect(userList).toHaveBeenCalled()
+    expect(userList).toHaveBeenCalledWith(initial)
+  })
+
+  it('should access the state using hooks and selectors', () => {
+    const initial = { list: ['John', 'Michael'] }
+    const users = create('userStore', initial)
+    const usersList = jest.fn(state => state.list)
+    const renderUser = jest.fn(users =>
+      users.map(user => <div key={user}>{user}</div>)
+    )
+
+    const Users = () => {
+      const { select } = useReworm('userStore')
+      const usersSelector = select(usersList)
+      return <Fragment>{usersSelector(renderUser)}</Fragment>
+    }
+    const John = () => {
+      const { select } = useReworm('userStore')
+
+      const johnSelector = select(s => s.list.find(u => u.includes('John')))
+
+      return <Fragment>{johnSelector(u => u)}</Fragment>
+    }
+
+    const App = () => (
+      <Provider>
+        <Fragment>
+          <Users />
+          <John />
+        </Fragment>
+      </Provider>
+    )
+
+    const result = shallow(<App />)
+
+    expect(result.html()).toBe('<div>John</div><div>Michael</div>John')
+    expect(usersList).toHaveBeenCalled()
+    expect(usersList).toHaveBeenCalledWith(initial)
+    expect(renderUser).toHaveBeenCalled()
+    expect(renderUser).toHaveBeenCalledWith(initial.list)
+  })
+
+  it('should modify state with hooks', () => {
+    const initial = 'John'
+    const user = create('userStore', initial)
+
+    const Users = () => {
+      const { get } = useReworm('userStore')
+      return <div>{get(val => val)}</div>
+    }
+
+    const App = () => {
+      const { set } = useReworm('userStore')
+      useEffect(() => {
+        set('Michael')
+      }, [])
+      return (
+        <Provider>
+          <div>
+            <Users />
+          </div>
+        </Provider>
+      )
+    }
+
+    const result = mount(<App />)
+
+    expect(result.html()).toEqual('<div><div>Michael</div></div>')
+  })
+
+  it('should trigger subscribe function', () => {
+    const initial = 'John'
+    const user = create('userStore', initial)
+
+    const App = () => {
+      const [name, setName] = useState('')
+      const { subscribe, set } = useReworm('userStore')
+      useEffect(() => {
+        subscribe(name => setName(name))
+        set('Michael')
+      }, [])
+
+      return <div>Hello {name}</div>
+    }
+
+    const result = mount(<App />)
+
+    expect(result.html()).toEqual('<div>Hello Michael</div>')
+  })
+
+  it('should unmount Provider', () => {
+    const user = create('userStore')
+
+    const App = () => <Provider />
+
+    const result = mount(<App />)
+    const unmount = result.unmount()
+
+    expect(typeof unmount).toBe('object')
   })
 })
