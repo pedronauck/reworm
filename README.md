@@ -9,10 +9,6 @@
   <img src="https://badgen.net/badge/license/MIT/blue" />
 </p>
 
-<p align="center">
-  <img src="https://cdn-std.dprcdn.net/files/acc_649651/9JemSv" width="80%"/>
-</p>
-
 ## 🧐 &nbsp; Why?
 
 Forget about actions, connections, reducers and a lot of boilerplate to create and manage states. With reworm you can create and manage state as simple as on the image above.
@@ -33,7 +29,7 @@ Then just wrap your app with our `Provider`, create your new state and use it!
 import React from 'react'
 import { Provider, create } from 'reworm'
 
-const { get } = create({ name: 'John' })
+const { get } = create('userStore', { name: 'John' })
 
 const App = () => (
   <Provider>
@@ -50,7 +46,7 @@ Instead of defining actions or something else to change your state, with reworm 
 import React from 'react'
 import { Provider, create } from 'reworm'
 
-const { set, get } = create({ name: 'John' })
+const { set, get } = create('userStore', { name: 'John' })
 
 class App extends React.Component {
   componentDidMount() {
@@ -74,7 +70,7 @@ Selectors are good because they prevent you from duplicating code. With it you c
 import React from 'react'
 import { Provider, create } from 'reworm'
 
-const { select } = create({ list: ['Peter', 'John'] })
+const { select } = create('userStore', { list: ['Peter', 'John'] })
 
 const johnSelector = select(state =>
   state.list.find(user => user.includes('John'))
@@ -95,7 +91,7 @@ If you want to listen changes on your state you can use `subscribe()`:
 import React from 'react'
 import { Provider, create } from 'reworm'
 
-const user = create()
+const user = create('userStore')
 
 class App extends Component {
   state = {
@@ -113,9 +109,33 @@ class App extends Component {
 }
 ```
 
+### Hooks 
+
+If you want to use hooks you can use the `useReworm`:
+
+```jsx
+import React, { useEffect } from 'react'
+import { Provider, create, useReworm } from 'reworm'
+
+const store = create('userStore', { name: 'John' })
+
+const App = () => {
+  const { get, set } = useReworm('userStore')
+  useEffect(() => {
+    set(prev => ({ name: 'Peter' + prev.name }))
+  }, []);
+
+  return (
+    <Provider>
+      <div>{get(s => s.name)}</div>
+    </Provider>
+  )
+}
+```
+
 ## 🔎 &nbsp; API
 
-#### `create<T>(initial?: T): State`
+#### `create<T>(storeName: string, initial?: T): State`
 Create a new state
 
 #### `get((state: T) => React.ReactNode)`
@@ -146,7 +166,7 @@ interface State<T> {
   subscribe: (fn: SubscribeFn<T>) => () => void
 }
 
-function create<T>(initial: T) => State<T>
+function create<T>(storeName: string, initial: T) => State<T>
 ```
 
 ## 🕺 &nbsp; Contribute
