@@ -1,7 +1,13 @@
-import React, { Component } from 'react'
-import createContext from 'create-react-context'
-import { ulid } from 'ulid'
-import equal from 'fast-deep-equal'
+import React, {
+  FC,
+  createContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useContext,
+} from 'react'
 
 export type PrevState<T> = (prevState: T) => T
 export type GetFn<T> = (state: T) => React.ReactNode
@@ -16,7 +22,7 @@ export interface State<T> {
   subscribe: (fn: SubscribeFn<T>) => () => void
 }
 
-export type Listener = (id: string, next: any) => void
+export type Listener = (storeName: string, next: any) => void
 
 const createStore = () => {
   const listeners: Listener[] = []
@@ -24,8 +30,8 @@ const createStore = () => {
 
   return {
     getInitial: () => initial,
-    setInitial: (id: string, next: any): void => {
-      initial[id] = next
+    setInitial: (storeName: string, next: any): void => {
+      initial[storeName] = next
     },
     subscribe: (listener: Listener): void => {
       listeners.push(listener)
@@ -33,57 +39,99 @@ const createStore = () => {
     unsubscribe: (listener: Listener): void => {
       listeners.splice(listeners.indexOf(listener), 1)
     },
-    emit: (id: string, next: any): void => {
+    emit: (storeName: string, next: any): void => {
       for (const listener of listeners) {
-        listener(id, next)
+        listener(storeName, next)
       }
     },
   }
 }
 
-const ctx = createContext<Record<string, any>>({})
 const store = createStore()
+const ctx = createContext<Record<string, any>>({})
 
-export class Provider extends Component {
-  public state = store.getInitial()
-  public componentDidMount(): void {
-    store.subscribe(this.handleUpdate)
-  }
-  public componentWillUnmount(): void {
-    store.unsubscribe(this.handleUpdate)
-  }
-  public shouldComponentUpdate(nextProps: any, nextState: any): boolean {
-    return !equal(this.state, nextState)
-  }
-  public render(): React.ReactNode {
-    return <ctx.Provider value={this.state}>{this.props.children}</ctx.Provider>
-  }
-
-  private handleUpdate = (id: string, next: any) => {
-    this.setState((prevState: any) => ({
-      [id]: typeof next === 'function' ? next(prevState[id]) : next,
-    }))
-  }
+function usePrevious<T extends any>(value: T): any {
+  const ref = useRef<T>()
+  useEffect(() => {
+    ref.current = value
+  }, [value])
+  return ref.current
 }
 
-export function create<T = any>(initial: T = {} as T): State<T> {
-  const id = ulid()
-  store.setInitial(id, initial)
+export const Provider: FC = props => {
+  const [state, setState] = useState(store.getInitial())
+
+  const prevState = usePrevious(state)
+
+  const handleUpdate = useCallback(
+    (storeName: string, next: any) => {
+      setState({
+        [storeName]:
+          typeof next === 'function' ? next(prevState[storeName]) : next,
+      })
+    },
+    [state, setState]
+  )
+
+  useEffect(() => {
+    store.subscribe(handleUpdate)
+
+    return () => {
+      store.unsubscribe(handleUpdate)
+    }
+  }, [store])
+
+  return useMemo(
+    () => <ctx.Provider value={state}>{props.children}</ctx.Provider>,
+    [props, state]
+  )
+}
+
+export function create<T extends any>(
+  storeName: string,
+  initial: T = {} as T
+): State<T> {
+  store.setInitial(storeName, initial)
 
   return {
-    get: fn => <ctx.Consumer>{state => fn(state[id] as T)}</ctx.Consumer>,
-    set: next => store.emit(id, next),
+    get: fn => (
+      <ctx.Consumer>{state => fn(state[storeName] as T)}</ctx.Consumer>
+    ),
+    set: next => store.emit(storeName, next),
     select: selector => fn => (
       <ctx.Consumer>
         {state => {
-          const select = selector(state[id] as T)
+          const select = selector(state[storeName] as T)
           return fn(select)
         }}
       </ctx.Consumer>
     ),
     subscribe: (fn: SubscribeFn<T>): (() => void) => {
       const sub = (selectedId: string, next: any) => {
-        if (selectedId === id) fn(next)
+        if (selectedId === storeName) fn(next)
+      }
+
+      store.subscribe(sub)
+      return () => store.unsubscribe(sub)
+    },
+  }
+}
+
+export function useReworm<T extends any>(storeName: string): State<T> {
+  const state = useContext(ctx)
+
+  return {
+    get: fn => (
+      <ctx.Consumer>{state => fn(state[storeName] as T)}</ctx.Consumer>
+    ),
+    set: next => store.emit(storeName, next),
+    select: selector => fn => {
+      const select = selector(state[storeName] as T)
+      return fn(select)
+    },
+    subscribe: (fn: SubscribeFn<T>): (() => void) => {
+      const sub = (selectedId: string, next: any) => {
+        if (selectedId === storeName) fn(next)
       }
 
       store.subscribe(sub)
