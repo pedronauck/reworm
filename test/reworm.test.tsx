@@ -15,7 +15,9 @@ describe('State', () => {
   it('should access state using get', () => {
     const initial = ['John', 'Michael']
     const users = create('userStore', initial)
-    const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
+    const userList = jest.fn(s =>
+      s.map((user: any) => <div key={user}>{user}</div>)
+    )
 
     const Users = () => <Fragment>{users.get(userList)}</Fragment>
     const App = () => (
@@ -36,14 +38,16 @@ describe('State', () => {
     const users = create('userStore', initial)
     const usersList = jest.fn(state => state.list)
     const renderUser = jest.fn(users =>
-      users.map(user => <div key={user}>{user}</div>)
+      users.map((user: any) => <div key={user}>{user}</div>)
     )
     const usersSelector = users.select(usersList)
 
-    const johnSelector = users.select(s => s.list.find(u => u.includes('John')))
+    const johnSelector = users.select(s =>
+      s.list.find((u: any) => u.includes('John'))
+    )
 
     const Users = () => <Fragment>{usersSelector(renderUser)}</Fragment>
-    const John = () => <Fragment>{johnSelector(u => u)}</Fragment>
+    const John = () => <Fragment>{johnSelector((u: any) => u)}</Fragment>
 
     const App = () => (
       <Provider>
@@ -109,7 +113,7 @@ describe('State', () => {
       <Provider>
         <div>
           <Users />
-          {user.get(val => (
+          {user.get((val: string) => (
             <input
               type="text"
               value={val || ''}
@@ -154,7 +158,9 @@ describe('State', () => {
     const initial = ['John', 'Michael']
     const users = create('userStore', initial)
 
-    const userList = jest.fn(s => s.map(user => <div key={user}>{user}</div>))
+    const userList = jest.fn(s =>
+      s.map((user: any) => <div key={user}>{user}</div>)
+    )
 
     const Users = () => {
       const { get } = useReworm('userStore')
@@ -179,7 +185,7 @@ describe('State', () => {
     const users = create('userStore', initial)
     const usersList = jest.fn(state => state.list)
     const renderUser = jest.fn(users =>
-      users.map(user => <div key={user}>{user}</div>)
+      users.map((user: any) => <div key={user}>{user}</div>)
     )
 
     const Users = () => {
@@ -190,9 +196,11 @@ describe('State', () => {
     const John = () => {
       const { select } = useReworm('userStore')
 
-      const johnSelector = select(s => s.list.find(u => u.includes('John')))
+      const johnSelector = select(s =>
+        s.list.find((u: any) => u.includes('John'))
+      )
 
-      return <Fragment>{johnSelector(u => u)}</Fragment>
+      return <Fragment>{johnSelector((u: any) => u)}</Fragment>
     }
 
     const App = () => (
